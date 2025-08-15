@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Work Time Calculator</title>
+  <style>
+    :root {
+      --bg: #0f172a;           /* slate-900 */
+      --bg-accent: #111827;    /* gray-900 */
+      --card: #111827;         /* gray-900 */
+      --muted: #94a3b8;        /* slate-400 */
+      --text: #e5e7eb;         /* gray-200 */
+      --accent: #22d3ee;       /* cyan-400 */
+      --accent-2: #a78bfa;     /* violet-400 */
+      --ring: rgba(34, 211, 238, 0.6);
+      --danger: #fca5a5;       /* red-300 */
+      --success: #86efac;      /* green-300 */
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background: radial-gradient(1200px 700px at 10% 10%, rgba(167, 139, 250, 0.15), transparent 60%),
+                  radial-gradient(900px 600px at 90% 20%, rgba(34, 211, 238, 0.12), transparent 60%),
+                  linear-gradient(180deg, var(--bg), #0b1024 60%);
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      padding: 2rem 1rem;
+    }
+
+    .wrapper {
+      width: 100%;
+      max-width: 720px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      margin: 0 0 .5rem;
+      font-size: clamp(1.6rem, 3vw + 1rem, 2.4rem);
+      letter-spacing: 0.2px;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 0.975rem;
+      line-height: 1.5;
+    }
+
+    .card {
+      background: rgba(17, 24, 39, 0.7);
+      backdrop-filter: saturate(140%) blur(6px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      padding: 1.1rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    @media (min-width: 640px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    label {
+      display: block;
+      font-size: 0.95rem;
+      margin-bottom: .45rem;
+      color: var(--text);
+    }
+
+    .field {
+      display: flex;
+      align-items: center;
+      background: #0b1227;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      padding: .6rem .75rem;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .field:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--ring);
+    }
+
+    .prefix, .suffix {
+      font-size: 1rem;
+      color: var(--muted);
+      margin-right: .5rem;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    input[type="number"] {
+      appearance: textfield;
+      background: transparent;
+      border: 0;
+      outline: none;
+      color: var(--text);
+      font: inherit;
+      width: 100%;
+    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .6rem;
+      margin-top: .5rem;
+      align-items: center;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      padding: .8rem 1rem;
+      border-radius: 12px;
+      color: #0a0f1f;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      font-weight: 700;
+      letter-spacing: .2px;
+      transition: transform .08s ease, filter .2s ease;
+    }
+    button:hover { filter: brightness(1.05); }
+    button:active { transform: translateY(1px) scale(.99); }
+
+    .muted-btn {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,.16);
+    }
+
+    .result {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 14px;
+      border: 1px dashed rgba(255,255,255,.18);
+      background: rgba(2,6,23,0.45);
+    }
+
+    .result h2 {
+      margin: 0 0 .4rem;
+      font-size: 1.15rem;
+    }
+
+    .big {
+      font-size: clamp(1.25rem, 1vw + 1rem, 1.6rem);
+      font-weight: 800;
+    }
+
+    .status { font-size: .95rem; color: var(--muted); margin-top: .35rem; }
+    .err { color: var(--danger); }
+    .ok  { color: var(--success); }
+
+    footer {
+      margin-top: 1rem;
+      text-align: center;
+      font-size: .85rem;
+      color: var(--muted);
+    }
+    a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <header>
+      <h1>Work Time Calculator</h1>
+      <p class="sub">Enter your after-tax hourly pay and a target amount. We'll tell you how long you need to work to earn it.</p>
+    </header>
+
+    <section class="card" aria-label="calculator">
+      <div class="grid">
+        <div>
+          <label for="hourly">Hourly salary (after tax)</label>
+          <div class="field">
+            <span class="prefix" aria-hidden="true">£</span>
+            <input id="hourly" type="number" inputmode="decimal" min="0" step="0.01" placeholder="e.g. 15.00" />
+          </div>
+        </div>
+
+        <div>
+          <label for="amount">Target amount</label>
+          <div class="field">
+            <span class="prefix" aria-hidden="true">£</span>
+            <input id="amount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="e.g. 250" />
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="calcBtn" type="button">Calculate</button>
+        <button id="resetBtn" type="button" class="muted-btn">Reset</button>
+      </div>
+
+      <div id="result" class="result" hidden>
+        <h2>Time required</h2>
+        <div id="time" class="big">—</div>
+        <div id="days" class="sub"></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const hourlyEl = document.getElementById('hourly');
+    const amountEl = document.getElementById('amount');
+    const calcBtn  = document.getElementById('calcBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    const result  = document.getElementById('result');
+    const timeOut = document.getElementById('time');
+    const daysOut = document.getElementById('days');
+
+    // Load saved hourly rate from localStorage if available
+    const savedHourly = localStorage.getItem('hourlyRate');
+    if (savedHourly) {
+      hourlyEl.value = savedHourly;
+    }
+
+    function clampSafe(n) {
+      if (!isFinite(n)) return NaN;
+      const max = 1e12;
+      const min = 0;
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function formatHM(totalHours) {
+      const whole = Math.floor(totalHours);
+      const minutes = Math.round((totalHours - whole) * 60);
+      const hrLabel = whole === 1 ? 'hour' : 'hours';
+      const minLabel = minutes === 1 ? 'minute' : 'minutes';
+      return `${whole} ${hrLabel} ${minutes ? `and ${minutes} ${minLabel}` : ''}`.trim();
+    }
+
+    function calculate() {
+      const hourly = clampSafe(parseFloat(hourlyEl.value));
+      const amount = clampSafe(parseFloat(amountEl.value));
+
+      if (isNaN(hourly) || isNaN(amount) || hourly === 0) {
+        timeOut.textContent = '—';
+        daysOut.textContent = '';
+        result.hidden = false;
+        return;
+      }
+
+      // Save hourly rate to localStorage
+      localStorage.setItem('hourlyRate', hourly);
+
+      const hoursNeeded = amount / hourly;
+      const eightHourDays = hoursNeeded / 8;
+      const daysWhole = Math.floor(eightHourDays);
+      const extraHours = Math.round((eightHourDays - daysWhole) * 8);
+
+      timeOut.textContent = formatHM(hoursNeeded);
+      daysOut.textContent = `≈ ${daysWhole} ${daysWhole === 1 ? 'workday' : 'workdays'} ${extraHours ? `+ ${extraHours} ${extraHours === 1 ? 'hour' : 'hours'}` : ''} (8h/day)`;
+      result.hidden = false;
+    }
+
+    calcBtn.addEventListener('click', calculate);
+    hourlyEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') calculate(); });
+    amountEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') calculate(); });
+
+    resetBtn.addEventListener('click', () => {
+      hourlyEl.value = '';
+      amountEl.value = '';
+      localStorage.removeItem('hourlyRate');
+      result.hidden = true;
+      timeOut.textContent = '—';
+      daysOut.textContent = '';
+      hourlyEl.focus();
+    });
+  </script>
+</body>
+</html>
